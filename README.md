@@ -18,8 +18,11 @@ source("FUNs.R")
 
 Read in possum data
 
+Note: three real datasets analyzed in the manuscript are provided in the
+excel sheet `ThreeRealDatasets.xlsx`.
+
 ``` r
-dat.his <- readxl::read_xlsx(path = "./data/ThreeRealDatasets.xlsx", 
+dat.his <- readxl::read_xlsx(path = "ThreeRealDatasets.xlsx", 
                              sheet = "Possum")
 ```
 
