@@ -36,14 +36,18 @@ categories.
 # the number of trapping occasions T = 4
 nstreams = 4
 
+# define capture history for m1
 hist.sel.num = paste0("1", paste0(rep(0, nstreams - 2), collapse = ""), "1")
+# define capture history for m0 
 hist.sel.den = paste0("1", paste0(rep(0, nstreams - 1), collapse = ""))
+# define capture history for the last cell count
 hist.key = paste0(paste0(rep(0, nstreams - 1), collapse = ""), "1")
-
+# get all possible observed capture histories
 hist.all <- get_allhist(nstreams)
 dat.fake <- data.frame("prof" = apply(hist.all, 1, paste, collapse = ""))
 dat.full <- left_join(dat.fake, dat.his, by = c("prof" = "hist"))
 dat.full$count[is.na(dat.full$count)] <- 0
+# summarize the observed data using a frequency table
 dat_aggre <- as.data.frame(matrix(dat.full$count, nrow = 1))
 colnames(dat_aggre) <- paste0("n", dat.full$prof)
 dat_aggre
@@ -54,7 +58,7 @@ dat_aggre
     ##   n0010 n0001
     ## 1    20     1
 
-To implement the proposed model selection precedure, we fit obtain AIC
+To implement the proposed model selection procedure, we first obtain AIC
 of the two candidate models:
 ![M\_{2,4}](https://latex.codecogs.com/png.latex?M_%7B2%2C4%7D "M_{2,4}")
 and
@@ -64,7 +68,7 @@ using the R function `fit.markovian.assump`.
 This function contains 4 arguments:
 
 - `nstreams` specifies the number of time points, i.e.,
-  ![T](https://latex.codecogs.com/png.latex?T "T") in the manuscript.
+  ![T](https://latex.codecogs.com/png.latex?T "T").
 - `dat_aggre` is the frequency table summarizing the data, the number of
   cells in this table is
   ![2^T-1](https://latex.codecogs.com/png.latex?2%5ET-1 "2^T-1").
@@ -97,13 +101,23 @@ The output of this function contains:
 - `AIC` = the AIC value of the fitted model.
 - `num_parm` = the number of parameters of the fitted model.
 
-Compute the AIC of the
-![M\_{2, 4}](https://latex.codecogs.com/png.latex?M_%7B2%2C%204%7D "M_{2, 4}")
-model for the possum data
+The `num.constraints` function can be used to compute the number of
+constraints imposed in the
+![M\_{j,T}](https://latex.codecogs.com/png.latex?M_%7Bj%2CT%7D "M_{j,T}")
+model by setting `testable = FALSE`.
 
 ``` r
 # compute the number of constraints imposed by the M_{2,4} model
 num.constraints(nstreams = 4, j.assumed = 2, testable = F)
+```
+
+    ## [1] 1
+
+Compute the AIC of the
+![M\_{2, 4}](https://latex.codecogs.com/png.latex?M_%7B2%2C%204%7D "M_{2, 4}")
+model for the possum data.
+
+``` r
 re.m24 <- fit.markovian.assump(nstreams = nstreams, 
                                dat_aggre = dat_aggre,
                                assump = "2days",
@@ -114,13 +128,23 @@ aic.m24
 
     ## [1] 676.2008
 
-Compute the AIC of the
-![M^\*\_{2, 4}](https://latex.codecogs.com/png.latex?M%5E%2A_%7B2%2C%204%7D "M^*_{2, 4}")
-model for the possum data
+The `num.constraints` function can be used to compute the number of
+constraints imposed in the
+![M^\*\_{j,T}](https://latex.codecogs.com/png.latex?M%5E%2A_%7Bj%2CT%7D "M^*_{j,T}")
+model by setting `testable = TRUE`.
 
 ``` r
 # compute the number of constraints imposed by the M*_{2,4} model
 num.constraints(nstreams = 4, j.assumed = 2, testable = T)
+```
+
+    ## [1] 4
+
+Compute the AIC of the
+![M^\*\_{2, 4}](https://latex.codecogs.com/png.latex?M%5E%2A_%7B2%2C%204%7D "M^*_{2, 4}")
+model for the possum data.
+
+``` r
 re.m24star <- fit.markovian.assump(nstreams = nstreams, 
                                dat_aggre = dat_aggre,
                                assump = "2days",
@@ -147,8 +171,9 @@ model for the possum data.
 The function `get_Nhat_psi` is used to obtain bias-corrected estimator.
 Note that, since the
 ![M\_{2,4}](https://latex.codecogs.com/png.latex?M_%7B2%2C4%7D "M_{2,4}")
-model only impose one untestable constraint, observed cell counts are
-used.
+model only impose one untestable constraint, observed cell counts
+coincide with their fitted values and are used for obtaining the
+bias-corrected estimate.
 
 ``` r
 # nc = the number of uniquely identified animals
@@ -165,7 +190,7 @@ Nhat.bc
     ## [1] 143
 
 As discussed in the manuscript, the lower bound of the credible interval
-is computed using the Beta(1, 0) prior, while the uppoer bound is
+is computed using the Beta(1, 0) prior, while the upper bound is
 computed using the Beta(0.5, 0.5) prior.
 
 The function `Dir_CI_alter_Fmax` is used to obtain 95% credible interval
@@ -175,7 +200,7 @@ associated the bias-corrected estimator.
   the number of cells in this table is
   ![2^T-1](https://latex.codecogs.com/png.latex?2%5ET-1 "2^T-1").
 - `nstreams` specifies the number of time points, i.e.,
-  ![T](https://latex.codecogs.com/png.latex?T "T") in the manuscript.
+  ![T](https://latex.codecogs.com/png.latex?T "T").
 - The argument `n.post` specifies the number of posterior samples
   generated to compute credible intervals.
 - The arguments `a` and `b` are parameters in Beta priors. When
